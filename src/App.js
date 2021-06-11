@@ -1,24 +1,67 @@
-import logo from './logo.svg';
-import './App.css';
+import { useContext, useState } from "react";
+import { Web3Context } from "web3-hooks";
+import { ethers } from "ethers";
 
 function App() {
+  const [web3State, login] = useContext(Web3Context);
+  const [ethBalance, setEthBalance] = useState(0);
+  const [address, setAddress] = useState(ethers.constants.AddressZero);
+  const [eth2Send, setEth2Send] = useState(0);
+
+  const handleClickGetBalance = async () => {
+    try {
+      const balance = await web3State.provider.getBalance(address);
+      setEthBalance(ethers.utils.formatEther(balance));
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const handleClickSend = async () => {
+    const weiAmount = ethers.utils.parseEther(eth2Send);
+    try {
+      await web3State.signer.sendTransaction({ to: address, value: weiAmount });
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <p>MetaMask installed: {web3State.isMetaMask ? "yes" : "no"}</p>
+      <p>Web3: {web3State.isWeb3 ? "injected" : "no-injected"}</p>
+      <p>logged: {web3State.isLogged ? "yes" : "no"}</p>
+      {!web3State.isLogged && (
+        <>
+          <button onClick={login}>login</button>
+        </>
+      )}
+      <p>Network id: {web3State.chainId}</p>
+      <p>Network name: {web3State.networkName}</p>
+      <p>account: {web3State.account}</p>
+      <p>Balance: {web3State.balance}</p>
+      <label htmlFor="balanceOf">Balance of:</label>
+      <input
+        id="balanceOf"
+        type="text"
+        value={address}
+        placeholder="ethereum address"
+        onChange={(event) => setAddress(event.target.value)}
+      />
+      <button onClick={handleClickGetBalance}>get balance</button>
+      <p>
+        Balance of {address}: {ethBalance} ETHER
+      </p>
+      <label htmlFor="eth2send">send to: {address}</label>
+      <input
+        id="eth2Send"
+        type="text"
+        placeholder="ether ammount"
+        value={eth2Send}
+        onChange={(event) => setEth2Send(event.target.value)}
+      />
+      <button onClick={handleClickSend}>send</button>
+    </>
   );
 }
 
